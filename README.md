@@ -1,2 +1,2 @@
 # phut-deck
-Phutbot's raspberry pi based stream management software
+PhutBot's raspberry pi based stream management software
