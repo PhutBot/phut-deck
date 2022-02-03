@@ -7,7 +7,7 @@ export default class Handler {
 
     @requestMapping({ method: 'GET' })
     static get(_:http.IncomingMessage, res:http.ServerResponse) {
-        fs.promises.readFile('layout1.json')
+        fs.promises.readFile('layout.json')
             .then((content) => {
                 res.writeHead(200);
                 res.end(content);
