@@ -24,31 +24,24 @@ function Stop(force:boolean) {
 server.mapDirectory('./dist/www/', { alias: '/' });
 server.mapDirectory('./components/', { alias: '/components' });
 
-server.defineHandler(Https.RequestMethod.GET, '/layout',
-    (_:http.IncomingMessage, res:http.ServerResponse) => {
-        fs.promises.readFile('layout.json')
-            .then((content) => {
-                res.writeHead(200);
-                res.end(content);
+const handlerDir = './dist/handler';
+fs.promises.readdir(handlerDir)
+    .then((files) => {
+        files.map((file) => `${handlerDir}/${file}`)
+            .filter((file) => file.endsWith('.js') && fs.statSync(file).isFile())
+            .forEach((file) => {
+                import(`.${file}`).then((module:any) => {
+                        server.mapHandler(module.default)
+                    });
             });
     });
-server.defineHandler(Https.RequestMethod.PATCH, '/layout',
-    (_:http.IncomingMessage, res:http.ServerResponse, opt:any) => {
-        opt.body().then((body:any) => body.text()).then((text:string) => {
-            fs.promises.writeFile('layout.json', text)
-                .then((content) => {
-                    res.writeHead(200);
-                    res.end(content);
-                });
-        })
-    });
+
 server.defineHandler(Https.RequestMethod.POST, '/stop',
     (_:http.IncomingMessage, res:http.ServerResponse) => {
         res.writeHead(200);
         res.end('Stopping the server');
         Stop(false);
     });
-
 
 process.on('SIGTERM', () => Stop(true));
 process.on('SIGINT', () => Stop(true));
