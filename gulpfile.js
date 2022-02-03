@@ -102,5 +102,6 @@ gulp.task('watch', function(cb) {
     gulp.watch(['./www/**/*'], gulp.series('frontend/copy'));
     cb();
     // sudo sh -c "echo fs.inotify.max_user_watches=8192 >> /etc/sysctl.conf"
-    // $ sudo sysctl -p
+    // sudo sysctl -p
+    // find /proc/*/fd -user "$USER" -lname anon_inode:inotify -printf '%hinfo/%f\n' 2>/dev/null | xargs cat | grep -c '^inotify'
 });
