@@ -14,15 +14,23 @@ const server = new Https.SimpleServer({
     useCache
 });
 
+function Stop(force:boolean) {
+    server.stop().finally(() => {
+        if (force) process.exit();
+    });
+}
+
 server.mapDirectory('./dist/www/', { alias: '/' });
 server.mapDirectory('./components/', { alias: '/components' });
 
 server.defineHandler(Https.RequestMethod.GET, '/stop', (_:http.IncomingMessage, res:http.ServerResponse) => {
     res.writeHead(200);
     res.end('Stopping the server');
-    setTimeout(() => {
-        server.stop();
-    }, Millis.fromSec(3));
+    Stop(false);
 });
+
+
+process.on('SIGTERM', () => Stop(true));
+process.on('SIGINT', () => Stop(true));
 
 server.start();

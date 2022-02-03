@@ -97,6 +97,7 @@ gulp.task('backend', gulp.parallel('backend/typescript'));
 gulp.task('frontend', gulp.parallel('frontend/copy', 'frontend/typescript'));
 gulp.task('build', gulp.parallel('backend', 'frontend'))
 gulp.task('default', gulp.series('clean', 'build'));
+
 gulp.task('watch', function(cb) {
     gulp.watch(['./components/**/*.ts'], gulp.series('frontend/typescript'));
     gulp.watch(['./www/**/*'], gulp.series('frontend/copy'));
