@@ -11,10 +11,52 @@
     
     <body>
         <phut-header></phut-header>
+        
+        <div id="constrols">
+            <button id="save" onclick="save()">
+                Save
+            </button>
+            <button id="add" onclick="add()">
+                New
+            </button>
+            <button id="next" onclick="next()">
+                Next
+            </button>
+            <button id="prev" onclick="prev()">
+                Prev
+            </button>
+        </div>
+
         <phut-deck id="deck" edit></phut-deck>
 
         <script>
             const deck = document.getElementById('deck');
+
+            function add() {
+                deck.addCell({ name: 'nop' });
+            }
+
+            function next() {
+                deck.nextPage();
+                console.log(deck.page);
+            }
+
+            function prev() {
+                deck.prevPage();
+                console.log(deck.page);
+            }
+
+            function save() {
+                const body = JSON.stringify({ "pages": deck.pages }, null, 2);
+                fetch('/layout', { method: 'PATCH', body })
+                    .catch(console.error);
+            }
+            
+            fetch('/layout')
+                .then((res) => res.json())
+                .then((json) => deck.pages = json.pages)
+                .catch(console.error);
+
             deck.addEventListener('action', (ev) => {
                 alert(ev.src);
             });

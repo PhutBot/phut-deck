@@ -14,6 +14,10 @@
 
         <script>
             const deck = document.getElementById('deck');
+            fetch('/layout')
+                .then((res) => res.json())
+                .then((json) => deck.pages = json.pages)
+                .catch(console.error);
             deck.addEventListener('action', (ev) => {
                 console.log(ev.src, ev.data);
             });

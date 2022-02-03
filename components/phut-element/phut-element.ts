@@ -17,6 +17,7 @@ export class PhutElement extends LitElement {
             box-sizing: border-box;
             font-family: sans-serif;
             display: flex;
+            flex-direction: column;
         }
 
         :host([hidden]) {
@@ -25,6 +26,7 @@ export class PhutElement extends LitElement {
 
         :host * {
             cursor: inherit;
+            box-sizing: border-box;
         }
     ` as CSSResultGroup;
 }

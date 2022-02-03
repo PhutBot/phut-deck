@@ -1,0 +1,25 @@
+{
+  "pages": [
+    {
+      "cells": [
+        {
+          "name": "ToggleLive",
+          "label": "Go Live",
+          "data": {
+            "isLive": true
+          }
+        },
+        {
+          "name": "nop"
+        }
+      ]
+    },
+    {
+      "cells": [
+        {
+          "name": "nop"
+        }
+      ]
+    }
+  ]
+}

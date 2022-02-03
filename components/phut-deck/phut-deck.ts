@@ -2,11 +2,15 @@ import { css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { PhutElement } from '../phut-element/phut-element.js';
 
-type TableCell = {
+type Cell = {
     name:string;
-    label:string;
-    data:any
-};
+    label?:string;
+    data?:any
+}
+
+type Page = {
+    cells:Array<Cell>;
+}
 
 class ActionEvent extends Event {
     public src?:string;
@@ -21,51 +25,78 @@ class ActionEvent extends Event {
 
 @customElement('phut-deck')
 export class PhutDeck extends PhutElement {
-    @property() buttons:Array<TableCell> = [
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-        { name: 'ToggleLive', label: 'Go Live', data: { isLive: true } },
-    ];
+    @property() page:number = 0;
+    @property() maxRows:number = 3;
+    @property() maxCols:number = 4;
+    @property() pages:Array<Page> = [ { cells: [] } ];
+
+    get maxCells() {
+        return this.maxRows * this.maxCols;
+    }
+    
+    nextPage() {
+        if (++this.page >= this.pages.length) {
+            this.page = 0;
+        }
+    }
+    
+    prevPage() {
+        if (--this.page < 0) {
+            this.page = this.pages.length - 1;
+        }
+    }
+
+    addCell(cell:Cell) {
+        if (this.pages[this.page].cells.length < this.maxCells) {
+            this.pages[this.page].cells.push(cell);
+            this.requestUpdate();
+        }
+    }
+
+    removeCell(index:number) {
+        if (index >= 0 && index < this.maxCells) {
+            this.pages[this.page].cells.splice(index, 1);
+            this.requestUpdate();
+        }
+    }
+
+    _handleClick(ev:Event) {
+        const index = Number.parseInt((ev.target as HTMLElement).getAttribute('data-index') ?? '-1');
+        const button = this.pages[this.page].cells[index];
+        this.dispatchEvent(new ActionEvent(button.name, button.data));
+    }
+
+    _handleRmCell(ev:Event) {
+        console.log('test');
+        const index = Number.parseInt(
+            (ev.target as HTMLElement)
+                .parentElement?.parentElement?.firstElementChild
+                ?.getAttribute('data-index') ?? '-1');
+        this.removeCell(index);
+    }
 
     render() {
         return html`
             <div id="table">
-                ${this.buttons.map(this.renderCell.bind(this))}
+                ${this.pages[this.page].cells.map(this.renderCell.bind(this))}
             </div>
         `;
     }
 
-    renderCell(button:TableCell, index:number) {
+    renderCell(cell:Cell, index:number) {
         return html`
             <div class="wrapper">
                 <phut-button
                         data-index="${index}"
                         @click="${this._handleClick}">
-                    ${button.label}
+                    ${cell.label ?? ''}
                 </phut-button>
                 <div class="edit" @click="${(ev:Event) => { ev.preventDefault(); }}">
-                    <button class="close">x</button>
+                    <button class="close" @click="${this._handleRmCell}">x</button>
                     <button class="move">+</button>
                 </div>
             </div>
         `;
-    }
-
-    _handleClick(ev:Event) {
-        const index = Number.parseInt((ev.target as HTMLElement).getAttribute('data-index') ?? '-1');
-        const button = this.buttons[index];
-        this.dispatchEvent(new ActionEvent(button.name, button.data));
     }
     
     static styles = [
@@ -83,6 +114,7 @@ export class PhutDeck extends PhutElement {
                 --el-width: 100vw;
                 width: var(--el-width);
                 height: calc(var(--el-width) * (9 / 16));
+                max-height: 100%;
                 cursor: none;
             }
 
@@ -95,8 +127,8 @@ export class PhutDeck extends PhutElement {
                 height: 100%;
                 border: var(--table-border);
                 border-radius: var(--table-border-radius);
-                grid-template-columns: repeat(var(--table-col-count), auto);
-                grid-template-rows: repeat(var(--table-row-count), auto);
+                grid-template-columns: repeat(var(--table-col-count), 1fr);
+                grid-template-rows: repeat(var(--table-row-count), 1fr);
                 grid-gap: var(--table-spacing);
             }
 
@@ -112,12 +144,12 @@ export class PhutDeck extends PhutElement {
 
             :host([edit]) {
                 --header-background-color: red;
-                --el-width: 1800px;
-                cursor: unset;
+                max-width: 1800px;
+                cursor: initial;
             }
 
             :host([edit]) .edit {
-                display: unset;
+                display: initial;
             }
 
             .edit {
@@ -127,8 +159,8 @@ export class PhutDeck extends PhutElement {
                 top: 0;
                 left: 0;
                 border: 1em solid rgba(0, 255, 0, 0.5);
-                width: calc(100% - (var(--table-spacing) / 2) - 2em);
-                height: calc(100% - (var(--table-spacing) / 2) - 2em);
+                width: 100%;
+                height:100%;
             }
 
             .edit .close,
