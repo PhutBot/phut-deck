@@ -1,5 +1,6 @@
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
+const sourcemaps = require('gulp-sourcemaps');
 const rollup = require('rollup');
 const rollupTypescript = require('@rollup/plugin-typescript');
 const commonJs = require('@rollup/plugin-commonjs');
@@ -35,7 +36,6 @@ function walk(filePath, action) {
 function del() {
     const transform = new Stream.Transform({ objectMode: true });
     transform._transform = (file, enc, cb) => {
-        console.log(file.path);
         if (fs.statSync(file.path).isFile()) {
             fs.promises.rm(file.path)
                 .then(cb)
@@ -49,15 +49,13 @@ function del() {
     return transform;
 }
 
-const backProject = ts.createProject('tsconfig.json', {
-    module: 'CommonJS',
-    moduleResolution: undefined,
-    declaration: true
-});
+const backProject = ts.createProject('tsconfig.json');
 gulp.task('backend/typescript', function () {
     return gulp.src('./src/**/*.ts')
-        .pipe(backProject())
-        .js.pipe(gulp.dest('./dist'));
+        .pipe(sourcemaps.init())
+        .pipe(backProject()).js
+        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../src' }))
+        .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('frontend/typescript', function () {
@@ -69,7 +67,8 @@ gulp.task('frontend/typescript', function () {
                 nodeResolve(),
                 rollupTypescript({
                     module: 'esnext',
-                    moduleResolution: 'node'
+                    moduleResolution: 'node',
+                    declaration: false
                 })
             ]
         })
@@ -96,8 +95,12 @@ gulp.task('clean', function() {
 
 gulp.task('backend', gulp.parallel('backend/typescript'));
 gulp.task('frontend', gulp.parallel('frontend/copy', 'frontend/typescript'));
-gulp.task('default', gulp.series('clean', gulp.parallel('backend', 'frontend')));
-gulp.task('watch', function() {
+gulp.task('build', gulp.parallel('backend', 'frontend'))
+gulp.task('default', gulp.series('clean', 'build'));
+gulp.task('watch', function(cb) {
     gulp.watch(['./components/**/*.ts'], gulp.series('frontend/typescript'));
     gulp.watch(['./www/**/*'], gulp.series('frontend/copy'));
-})
+    cb();
+    // sudo sh -c "echo fs.inotify.max_user_watches=8192 >> /etc/sysctl.conf"
+    // $ sudo sysctl -p
+});
